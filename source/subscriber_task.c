@@ -83,8 +83,8 @@ uint32_t current_device_state = DEVICE_OFF_STATE;
 IotMqttSubscription_t subscribeInfo =
 {
     .qos = (IotMqttQos_t) MQTT_MESSAGES_QOS,
-    .pTopicFilter = MQTT_TOPIC,
-    .topicFilterLength = (sizeof(MQTT_TOPIC) - 1),
+    .pTopicFilter = MQTT_TOPIC_LEDSTATUS,
+    .topicFilterLength = (sizeof(MQTT_TOPIC_LEDSTATUS) - 1),
     /* Configure the callback function to handle incoming MQTT messages */
     .callback.function = mqtt_subscription_callback
 };
@@ -179,6 +179,7 @@ static void mqtt_subscription_callback(void *pCallbackContext,
 {
     /* Received MQTT message */
     const char *pPayload = pPublishInfo->u.message.info.pPayload;
+    const char *pTopicName = pPublishInfo->u.message.info.pTopicName;
     /* LED state that should be sent to LED task depending on received message. */
     uint32_t subscribe_led_state = DEVICE_OFF_STATE;
 
@@ -198,26 +199,35 @@ static void mqtt_subscription_callback(void *pCallbackContext,
            pPublishInfo->u.message.info.qos,
            pPublishInfo->u.message.info.payloadLength,
            pPayload);
+    /* Which topic is received */
+    if ((strlen(MQTT_TOPIC_LEDSTATUS) == pPublishInfo->u.message.info.topicNameLength) &&
+    		(strncmp(MQTT_TOPIC_LEDSTATUS, pTopicName, pPublishInfo->u.message.info.topicNameLength) == 0))
+		{
+			/* Assign the LED state depending on the received MQTT message. */
+			if ((strlen(MQTT_DEVICE_ON_MESSAGE) == pPublishInfo->u.message.info.payloadLength) &&
+				(strncmp(MQTT_DEVICE_ON_MESSAGE, pPayload, pPublishInfo->u.message.info.payloadLength) == 0))
+			{
+				subscribe_led_state = DEVICE_ON_STATE;
+			}
+			else if ((strlen(MQTT_DEVICE_OFF_MESSAGE) == pPublishInfo->u.message.info.payloadLength) &&
+					 (strncmp(MQTT_DEVICE_OFF_MESSAGE, pPayload, pPublishInfo->u.message.info.payloadLength) == 0))
+			{
+				subscribe_led_state = DEVICE_OFF_STATE;
+			}
+			else
+			{
+				printf("Received MQTT message not in valid format!\n");
+				return;
+			}
+			/* Notify the subscriber task about the received LED control message. */
+			xTaskNotify(subscriber_task_handle, subscribe_led_state, eSetValueWithoutOverwrite);
 
-    /* Assign the LED state depending on the received MQTT message. */
-    if ((strlen(MQTT_DEVICE_ON_MESSAGE) == pPublishInfo->u.message.info.payloadLength) &&
-        (strncmp(MQTT_DEVICE_ON_MESSAGE, pPayload, pPublishInfo->u.message.info.payloadLength) == 0))
-    {
-        subscribe_led_state = DEVICE_ON_STATE;
-    }
-    else if ((strlen(MQTT_DEVICE_OFF_MESSAGE) == pPublishInfo->u.message.info.payloadLength) &&
-             (strncmp(MQTT_DEVICE_OFF_MESSAGE, pPayload, pPublishInfo->u.message.info.payloadLength) == 0))
-    {
-        subscribe_led_state = DEVICE_OFF_STATE;
-    }
-    else
-    {
-        printf("Received MQTT message not in valid format!\n");
-        return;
-    }
+		}
+    else if ((strlen(MQTT_TOPIC_SETPOINT) == pPublishInfo->u.message.info.topicNameLength) &&
+    		(strncmp(MQTT_TOPIC_SETPOINT, pTopicName, pPublishInfo->u.message.info.topicNameLength) == 0))
+		{
+		}
 
-    /* Notify the subscriber task about the received LED control message. */
-    xTaskNotify(subscriber_task_handle, subscribe_led_state, eSetValueWithoutOverwrite);
 }
 
 /******************************************************************************

@@ -47,23 +47,25 @@
 * Macros
 ********************************************************************************/
 /* MQTT Broker/Server address and port used for the MQTT connection. */
-#define MQTT_BROKER_ADDRESS               "MY_AWS_IOT_ENDPOINT_ADDRESS"
-#define MQTT_PORT                         8883
+#define MQTT_BROKER_ADDRESS               "raspberrypi.home"
+#define MQTT_PORT                         1883
 
 /* Set this macro to 'true' if the MQTT Broker being used is hosted by AWS IoT 
  * Core service, else 'false'.
  */
-#define AWS_IOT_MQTT_MODE                 ( true )
+#define AWS_IOT_MQTT_MODE                 ( false )
 
 /* Set this macro to 'true' if a secure connection to the MQTT Broker is  
  * required to be established, else 'false'.
  */
-#define MQTT_SECURE_CONNECTION            ( true )
+#define MQTT_SECURE_CONNECTION            ( false )
 
-/* The MQTT topic on which the LED control messages will be published and 
+/* The MQTT topics on which the LED control messages will be published and
  * subscribed.
  */
-#define MQTT_TOPIC                        "ledstatus"
+#define MQTT_NAME						   "PURPLE"
+#define MQTT_TOPIC_LEDSTATUS               "ledstatus"
+#define MQTT_TOPIC_SETPOINT                "setpoint"
 
 /* Configuration for the 'Will message' that will be published by the MQTT 
  * broker if the MQTT connection is unexpectedly closed. This configuration is 
@@ -71,7 +73,7 @@
  * will publish the Will message on the Will topic when it recognizes an 
  * unexpected disconnection from the client.
  */
-#define MQTT_WILL_TOPIC_NAME              MQTT_TOPIC "/will"
+#define MQTT_WILL_TOPIC_NAME              MQTT_NAME "/will"
 #define MQTT_WILL_MESSAGE                 ("MQTT client unexpectedly disconnected!")
 
 /* Set the QoS that is associated with the MQTT publish, and subscribe messages.
@@ -93,7 +95,7 @@
 #define MQTT_KEEP_ALIVE_SECONDS           ( 60 )
 
 /* MQTT client identifier prefix. */
-#define MQTT_CLIENT_IDENTIFIER_PREFIX     "psoc6-mqtt-client"
+#define MQTT_CLIENT_IDENTIFIER_PREFIX     "AR_Thing_01"
 
 /* The longest client identifier that an MQTT server must accept (as defined
  * by the MQTT 3.1.1 spec) is 23 characters. Add 1 to include the length of the
